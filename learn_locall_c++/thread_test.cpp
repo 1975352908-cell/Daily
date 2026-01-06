@@ -360,28 +360,159 @@ call_once()函数模版，保证某个函数只被调用一次
    @return: void
 
 */
-std::once_flag flag;
+// std::once_flag flag;
 
-void winner(int id)
-{
-  std::cout<<"winner is "<<id<<std::endl;
-}
-void complete_task(int id)
-{
-  for (int i=0; i<1000; ++i)
-  std::this_thread::sleep_for(std::chrono::milliseconds(1));
-  std::call_once(flag,winner,id);
-}
-int main()
-{
-  std::thread threads[10];
-  for(int i=0;i<10;i++)
-  {
-     threads[i]=std::thread(complete_task,i+1);
-  }
-  for(int i=0;i<10;i++)
-  {
-    threads[i].join();
-  }
-  return 0;
-}
+// void winner(int id)
+// {
+//   std::cout<<"winner is "<<id<<std::endl;
+// }
+// void complete_task(int id)
+// {
+//   for (int i=0; i<1000; ++i)
+//   std::this_thread::sleep_for(std::chrono::milliseconds(1));
+//   std::call_once(flag,winner,id);
+// }
+// int main()
+// {
+//   std::thread threads[10];
+//   for(int i=0;i<10;i++)
+//   {
+//      threads[i]=std::thread(complete_task,i+1);
+//   }
+//   for(int i=0;i<10;i++)
+//   {
+//     threads[i].join();
+//   }
+//   return 0;
+// }
+
+
+
+
+// #include <iostream>
+// #include <thread>
+// #include <mutex>
+// #include <condition_variable>
+// #include <queue>
+
+// std::queue<int> buffer;         // 共享缓冲区
+// std::mutex mtx;                 // 用于同步访问缓冲区的互斥锁
+// std::condition_variable cv;     // 条件变量
+
+// void producer() {
+//     for (int i = 1; i <= 5; ++i) {
+//         std::this_thread::sleep_for(std::chrono::milliseconds(500));  // 模拟生产过程
+//         std::lock_guard<std::mutex> lock(mtx);  // 加锁
+//         buffer.push(i);  // 向缓冲区中添加数据
+//         std::cout << "Produced: " << i << std::endl;
+//         cv.notify_one();  // 通知消费者线程
+//     }
+// }
+
+// void consumer() {
+//     while (true) {
+//         std::unique_lock<std::mutex> lock(mtx);  // 加锁
+//         cv.wait(lock, [](){ return !buffer.empty(); });  // 如果缓冲区为空，等待生产者
+//         int item = buffer.front();  // 获取数据
+//         buffer.pop();  // 从缓冲区中移除数据
+//         std::cout << "Consumed: " << item << std::endl;
+//         lock.unlock();  // 解锁
+//         if (item == 5) break;  // 当消费到 5 时，退出循环
+//     }
+// }
+
+// int main() {
+//     std::thread t1(producer);  // 启动生产者线程
+//     std::thread t2(consumer);  // 启动消费者线程
+
+//     t1.join();  // 等待生产者线程完成
+//     t2.join();  // 等待消费者线程完成
+
+//     return 0;
+// }
+
+
+
+
+/*                               test                                   */
+
+
+
+/*编写一个程序，创建两个线程来分别增加一个全局变量 counter 的值。
+两个线程都对 counter 进行 1000 次加 1 操作。
+使用 std::mutex 来保证对 counter 的访问是线程安全的。最后输出 counter 的值。*/
+
+// int counter=0;
+// std::mutex mtx;
+// void add_counter()
+// {
+//    for(int i=0;i<1000;i++)
+//    {
+//     std::lock_guard<std::mutex> lock(mtx);
+//     counter++;
+//    }
+// }
+// int main()
+// {
+//   std::thread t1(add_counter);
+//   std::thread t2(add_counter);
+//   t1.join();
+//   t2.join();
+//   std::cout<<"counter is "<<counter<<std::endl;
+//   return 0;
+// }
+
+
+/*使用 std::condition_variable 来解决生产者消费者问题。
+一个生产者线程不断向缓冲区中生产数据，消费者线程从缓冲区中消费数据。
+使用 std::mutex 和 std::condition_variable 来同步生产者和消费者线程。*/
+
+#include<queue>
+#include<mutex>
+#include<condition_variable>
+
+// std::queue<int> buffer;
+// std::mutex mtx;
+// std::condition_variable cv;
+// #define MAX_BUFFER_SIZE 10
+// int  i=0;
+// void producer()
+// {
+//     while(true)
+//     {
+//        std::unique_lock<std::mutex> lock(mtx);
+//        //等待知道buffer没有超过最大值
+//        cv.wait(lock,[&](){
+//            return buffer.size()<MAX_BUFFER_SIZE;
+//        });
+//        //wait成功,生产数据;
+//        buffer.push(i++);
+//        std::cout<<"product :"<<i-1<<std::endl;
+//        //唤醒消费者;
+//        cv.notify_all();
+//     }
+//  }
+//  void consumer()
+//  {
+//     while(true)
+//     {
+//       std::unique_lock<std::mutex> lock(mtx);
+//       cv.wait(lock,[&](){
+//           return !buffer.empty();
+//       });
+//       int con=buffer.front();
+//       std::cout<<"consum :"<<con<<std::endl;
+//       buffer.pop();
+//       cv.notify_all();
+//     }
+
+//  }
+// int main()
+// {
+//   std::thread t1(producer);
+//   std::thread t2(consumer);
+//   t1.join();
+//   t2.join();
+//   return 0;
+// }
+
